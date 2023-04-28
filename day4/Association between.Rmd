@@ -1,0 +1,105 @@
+---
+title: "Assessing the Association Between Variables"
+author: "Oscar Rodriguez de Rivera"
+date: "27-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this worksheet we will consider how we can assess the association between two variables in R.
+
+### Chi-squared test for contingency tables
+
+Another use of the chi-squared test is to explore the relationship between the variables in a two-way contingency table. In this case, we ask whether the levels of one variable affect the distribution of the other variable.
+
+-   [**Exercise 1.1**]{.underline} 
+
+Consider the following contingency table where we want to examine whether there is an association between marital status and alcohol consumption.
+
+
+|Marital status|Abstain     | 1-60    |$\geq$ 60 | Total |
+|--------------|------------|---------|----------|-------|
+| Single       | 67         | 213     | 74       | 354   |
+| Married      | 411        | 633     | 129      | 1173  |
+| Widowed      | 85         | 51      | 7        | 143   |
+| Divorced     | 27         | 60      | 15       | 102   | 
+| Total        | 590        | 957     | 22       | 1772  |
+
+
+State the null and alternative hypotheses:
+
+$\text{H}_0$: there is no association between marital status and alcohol consumption (i.e. they are independent) versus $\text{H}_1$: there is an association between marital status and alcohol consumption.
+
+Download Table1.csv from Moodle and import it into R. Use the chi-squared test to learn whether there’s an association between marital status and alcohol consumption.
+
+```{r}
+data1<-read.csv("~/Dropbox/Rcourse/day4/Table1.csv")
+chisq.test(data1[,2:4])
+```
+
+The p-value is very small and certainly less than 0.001, so the result is significant at the 0.1\% significance level. There is very strong evidence to suggest that marital status and alcohol consumption are associated.
+
+### Testing correlation between two variables
+
+
+When studying the correlation between two random variables we want to measure the strength of their relationship. We want to know whether their relationship is positive or negative and whether it is linear or not. We have seen before that graphically we can do this using a scatter plot and we can also use the Pearson correlation coefficient to measure the strength of linear correlation. In addition, often we may want to test:
+
+$$
+\text{H}_{0}: \rho = 0 \ \ \  versus \ \ \  \text{H}_1: \rho \neq 0
+$$
+
+The test statistic is given by $T=R \sqrt{\frac{n-2}{1-R^2}}$ and we reject $\text{H}_0$ at the $100\alpha\%$ level if $|T| > t_{n-2, \alpha/2}$
+
+-   [**Exercise 2.1**]{.underline} 
+
+Consider the following table of paired blood pressure measurements from 15 patients:
+
+```{r}
+SysBP <-c(210,169,187,160,167,176,185,206,173,146,174,201,198,148,154); DiasBP<-c(130,122,124,104,112,101,121,124,115,102,98,119,106,107,100)
+cbind(SysBP,DiasBP)
+```
+
+Test whether there is a linear association between systolic blood pressure and diastolic blood pressure.
+
+```{r}
+plot(SysBP,DiasBP)
+```
+
+Now test for a non-zero correlation:
+
+```{r}
+cor.test(SysBP,DiasBP)
+```
+
+**What can you conclude? Is there evidence of a linear association between the variables?**
+
+The p-value indicates that the test statistic of t = 3.2085 is significant at the 1\% level, so there is strong evidence of a linear association between systolic and diastolic blood pressure.
+
+The following command calculates Spearman’s rank correlation:
+
+```{r}
+cor.test(SysBP,DiasBP,method="spearman")
+```
+
+The rank correlation is 0.6023237. The output also includes the results of the hypothesis test for zero rank correlation versus non-zero rank correlation. The warning message indicates that the p-value cannot be trusted if there are ties in the data, as here.
+
+### Exercises
+
+-   [**Exercise 3.1**]{.underline} 
+
+The dataset `accidents.csv` summarises the results from a survey on the number of car accidents in Kent in 2016. The age of the drivers who were involved in the accident and whether the accident was minor or major have been reported. Test whether the two variables, age and minor/major accident are associated.
+
+```{r}
+data2<-read.csv("~/Dropbox/Rcourse/day4/accidents.csv")
+```
+
+The null hypothesis is that there is no association between the age of the driver and the severity of the acci- dent; the alternative hypothesis is that the age of the driver is associated with the severity of the accident.
+
+```{r}
+chisq.test(data2[,2:4])
+```
+
+The warning message is due to a relatively small sample; the approximation of the distribution of the test statistic to the $\chi_2^2$ distribution may not be valid so the output must be treated with caution. If the p-value is to be believed, there is some evidence (at the 5\% significance level) that age of driver and severity of accident are associated.

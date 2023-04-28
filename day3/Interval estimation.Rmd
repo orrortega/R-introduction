@@ -1,0 +1,270 @@
+---
+title: "Interval Estimation"
+author: "Oscar Rodriguez de Rivera"
+date: "26-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this worksheet, we will explore different ways of deriving confidence intervals in R. We will study examples of computing the confidence interval (CI) for the mean $\mu$ from a population which is assumed to be normal and for the population proportion $\pi$. Work through each of the tasks below and answer the questions set.
+
+### CI for a population from the normal distribution
+
+A confidence interval for the unknown mean $\mu$ when $\sigma^2$ is know is given by $\bar{X}\pm z_{\frac{\alpha}{2}}\frac{\sigma}{\sqrt{n}}$ whereas in the case where $\sigma^2$ is unknown it is given by $\bar{X}\pm t_{n-1\frac{\alpha}{2}}\frac{S}{\sqrt{n}}$
+
+-   [**Exercise 1.1**]{.underline}
+
+The `ewr` data set contains monthly information about the taxi in and taxi out times for 8 airlines at EWR (Newark) airport during 1999-2001. Let us assume that the taxi in and taxi out times of airline ’AA’ follows a normal distribution. We need to find a 95\% confidence interval for the mean $\mu$ given that the variance is known to be $\sigma^2$ = 81.
+
+**Solution:** 
+
+A 95\% confidence interval implies that $\alpha$ = 0.05 and so we need to find the $z_{\frac{\alpha}{2}}=z_{0.025}$ percentile point of the standard Normal distribution.
+
+First install the relevant package and look at the contents of the data file ewr: 
+
+```{r}
+#install.packages("UsingR")
+library(UsingR)
+ewr
+```
+
+Now set the data for airline ’AA’ into matrix data1:
+
+
+```{r cars}
+data1<-as.matrix(ewr[1:46,3])
+data1
+```
+
+Calculate the number of observations and the sample mean time, noting that the standard deviation is known to be 9:
+
+```{r}
+n<-nrow(data1)
+n
+xbar<-mean(data1)
+xbar
+sd<-9
+```
+
+Use the function qnorm to find $z_{0.025}$ and hence calculate $z_{\frac{\alpha}{2}}\frac{\sigma}{\sqrt{n}}$:
+
+```{r}
+z<-qnorm(.975)
+E<-z*sd/sqrt(n)
+```
+
+$z_{0.025}$
+```{r}
+z
+```
+
+$z_{\frac{\alpha}{2}}\frac{\sigma}{\sqrt{n}}$:
+```{r}
+E
+```
+
+Thus, the 95\% confidence interval for $\mu$ is:
+
+```{r}
+CI<- xbar + c(-E, E)
+CI
+```
+
+-   [**Exercise 1.2**]{.underline}
+
+Using the same data set as in exercise 1.1, find a 95\% confidence interval for the mean $\mu$ when the variance $\sigma^2$ is unknown
+
+**Solution:** As the standard deviation is unknown we need to calculate the sample standard deviation and hence the standard error of the sample mean:
+
+```{r}
+st.de<-sd(data1)
+st.error<-st.de/sqrt(n)
+st.de
+st.error
+```
+
+A 95\% confidence interval implies that $\alpha$ = 0.05 and so we need to find the $t_{n−1,\frac{\alpha}{2}} = t_{45,0.025}$ percentile point of the $t$-distribution. Use the function qt to find $t_{n−1,0.025}$ and hence to calculate $t_{n−1,0.025\frac{s}{\sqrt{n}}}$:
+
+$t_{n−1,0.025}$
+```{r}
+t<-qt(.975, df=n-1)
+t
+```
+
+$t_{n−1,0.025\frac{s}{\sqrt{n}}}$
+```{r}
+e<-t*st.error
+e
+```
+
+Thus, the 95\% confidence interval for $\mu$ is:
+```{r}
+CI<- xbar + c(-e,e)
+CI
+```
+
+They are both centred on the sample mean, $\bar{x}$. Comparing the widths of the CIs, that based on the sample standard deviation and the $t$-distribution is wider to allow for the sampling error in the estimate of the unknown standard deviation, $\sigma$.
+
+### Approximate CI for non-normal distributions
+
+Let $X_1, X_2, . . . , X_n$ be a random sample from the Binomial Bi($n, \pi$) distribution with mean $n\pi$ and variance $n\pi(1-\pi)$. Then a CI with approximate confidence coefficient $1 − \alpha$ for the proportion $\pi$ is given by $\hat{\pi}\pm z_{\frac{\alpha}{2}}\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}$.
+
+-   [**Exercise 2.1**]{.underline}
+
+Suppose we want to know the proportion of the population who believe that the government’s policies will boost the economy. For this reason we will survey 1000 people; the selection process will ensure we have a random sample and that 1000 people is enough to approximate the normal distribution. The true population proportion will be denoted by $\pi$. Suppose that 567 people are positive that the economy will grow following the proposed economic policies. Find a 95\% CI for the proportion $\pi$.
+
+**Solution:** 
+A point estimate for the population proportion is the sample proportion denoted by $\hat{\pi} = \frac{567}{1000}$. To calculate the CI in R:
+
+1. Set n to 1000
+
+2. Set p.hat to the point estimate of $\pi$
+
+3. Set st.error to $\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}$
+
+4. Calculate $z_{\frac{\alpha}{2}}\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}$
+
+5. Calculate the confidence interval for $\pi$
+
+**Solution**
+
+```{r}
+n<-1000
+p.hat <- 567/n
+st.error <- sqrt(p.hat*(1-p.hat)/n)
+e<- qnorm(.975)*st.error # alpha = 0.05, e is the margin of error (half the width of the CI  
+CI<- p.hat + c(-e, e)
+CI
+```
+
+-   [**Exercise 2.2**]{.underline}
+
+Suppose that a newspaper publishes an opinion poll about a referendum. The information given is that 1000 have participated in the poll, that the sample proportion of people who are going to vote yes at the referendum is 0.58, i.e. $\hat{\pi}= 0.58$, and that the margin of error (half the width of the CI) is 4\%. No information is given about the confidence coefficient $1 − \alpha$. Find the value of $1 − \alpha$.
+
+Solution: If the opinion poll has been based on a random sample and the $n = 1000$ is large enough to α
+ approximate to the normal distribution, then a CI for $\pi$ is $\hat{\pi}\pm z_{\frac{\alpha}{2}}\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}$. Therefore, since we know the sample proportion and the margin of error ($z_{\frac{\alpha}{2}}\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}$), we can solve $z_{\frac{\alpha}{2}}$ and hence find $\alpha$.
+
+First calculate the standard error of the sample proportion and hence the value of z:
+
+```{r}
+st.error<- sqrt(.58*(1-.58)/1000)
+z <- 0.04/st.error
+z
+```
+
+Now use the pnorm command to calculate $\alpha$ and hence the confidence coefficient of the interval:
+
+```{r}
+alpha <- 2*pnorm(-z)
+1-alpha
+```
+
+The confidence coefficient of the interval is 0.989618, i.e. a 99\% confidence interval, approximately.
+
+### The `prop.test()` function for confidence intervals
+
+The built-in function of R to calculate confidence intervals for a population proportion is called `prop.test()`. Use `prop.test()` to calculate a 95\% CI for Exercise 2.1:
+
+```{r}
+prop.test(567,1000,conf.level=0.95)
+```
+
+The 95\% confidence interval for $\pi$ is:
+
+CI = (0.5355888 0.5978900)
+
+The confidence interval we get using this function is slightly different from the one we got in Exercise 2.1. This is because `prop.test()` solves the equation $P(-z_{\frac{\alpha}{2}}\leq \frac{\hat{\pi}-\pi}{SD(\hat{\pi})} \leq z_{\frac{\alpha}{2}}) \approx 1 - \alpha$.
+
+
+### Exercises
+
+-   [**Exercise 4.1**]{.underline}
+
+Suppose that a survey taken of a random sample of 350 students gives that the sample proportion is 0.42, i.e. $\hat{\pi} = 0.42$. The same survey is repeated and a random sample of 1,000 students gives the same value for $\hat{\pi}$. Find 95\% confidence intervals for the population proportion $\pi$ based on each of the two random samples. Compare the two CIs.
+
+**Solution:**
+```{r}
+prop.test(.42*350,n=350,conf.level=0.95)
+```
+
+```{r}
+prop.test(.42*1000,n=1000,conf.level=0.95)
+```
+
+```{r}
+#Width of the CIs
+#n=350
+0.4737385-0.3680462
+#n=1000
+0.4513427-0.3892796
+```
+
+The second CI is narrower because of the larger sample size
+
+-   [**Exercise 4.2**]{.underline}
+
+Complete the function below so it computes a confidence interval (CI) for the mean μ. The function’s argument is: the data (x), a character saying whether the variance is known or unknown (i= 0 if unknown and 1 if known), the variance if known (sigma2), and the confidence level (a). You will need to use an if statement to assess whether the variance is known or not and then compute the CI accordingly.
+
+You could structure your function like this and then use any data set to test it.
+```{r}
+CImean<-function(x,a,sigma2,i) {
+              xbar<-mean(x)           #calculate the sample mean of x
+              n<-nrow(x)              #n = the number of observations
+if (i==1) { print("sigma is known")   #use an if loop to perform correct calculation
+               sd<-sqrt(sigma2)       #sd = standard deviation of x
+               e<-qnorm(1-a/2)*sd/sqrt(n)   # e = z x standard error of the sample mean
+               CI<- xbar + c(-e, e)  # calculate the CI
+               print(CI)             # print the CI
+}
+else if (i==0) {                     # complete the function
+
+
+}
+   list(CI=CI)
+}
+```
+
+**Solution:**
+```{r eval=FALSE, include=FALSE}
+CImean<-function(x,a,sigma2,i)#i=1 if sigma is known and 0 otherwise
+   {
+     xbar<-mean(x)
+     n<-nrow(x)
+     if (i==1) { print("sigma is known")
+                 sd<-sqrt(sigma2)
+                 e<-qnorm(1-a/2)*sd/sqrt(n)
+                 CI<- xbar + c(-e, e)
+                 print(CI)
+     }
+     else if (i==0) { print("sigma is unknown")
+}
+list(CI=CI)
+ st.de<-sd(x)
+ st.error<-st.de/sqrt(n)
+ e<-qt(1-a/2, df=n-1)*st.error
+CI<- xbar + c(-e, e)
+ print(CI)
+   }
+```
+
+Use any dataset to test this. One option is data1 used earlier:
+sigma = 9, so sigma2=81
+
+```{r eval=FALSE, include=FALSE}
+CImean(data1,0.05,81,1)
+```
+
+sigma unknown
+
+```{r eval=FALSE, include=FALSE}
+CImean(data1,0.05,0,0)
+```
+
+```{r eval=FALSE, include=FALSE}
+CI
+```
+
+

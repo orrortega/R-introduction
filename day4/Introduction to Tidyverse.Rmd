@@ -1,0 +1,149 @@
+---
+title: "Introduction to Tidyverse"
+author: "Oscar Rodriguez de Rivera"
+date: "27-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to Tidyverse
+
+### What is the Tidyverse?
+
+“The Tidyverse” is the nickname for a family of packages that have agreed on one way to represent tabular data (they call it “tidy data”. The functions in these packages accept tidy data frames as input and return tidy data frames as output. Since the input and output are the same type of data, a series of simple functions can be chained one-after-the-other to perform complex tasks.
+
+In this following example, functions from four different Tidyverse packages (`janitor`, `tibble`, `tidyr`, and `dplyr`) are working together in a single “pipeline”, where the output from each line is passed to the next line where it is used as the input.
+
+```{r}
+library(tibble)
+library(tidyr)
+library(dplyr)
+library(janitor)
+mtcars %>%
+janitor::clean_names() %>%                         # Standardise column names
+tibble::rownames_to_column("model") %>%            # Put rownames in the table
+tidyr::separate(model,                             # Split 'model' into 2 cols
+                into = c("manufacturer", "model")) %>%
+dplyr::top_n(5, wt = mpg) %>%                      # Get cars with best mileage
+dplyr::select(manufacturer, model, mpg:disp)       # Keep only some columns
+```
+
+### What are the advantages of Tidyverse over base R?
+
+1. Tidyverse packages are built around a common convention and workflow, so it’s easier to understand new packages and slot them into your existing workflow.
+
+2. Many existing data structures can be used as-is with the Tidyverse (e.g. base R’s data.frame), or transformed to a tidy format. For example, broom::tidy() can take many types of statistical output (lm(), glm(), t.test(), and more) and turn it into a tidy data frame.
+
+3. Pipelines make each step of data manipulation and analysis very clear, even to people who are rusty at R.
+
+4. The pipeline interface is a great introduction to functional programming, and you can bring that knowledge with you to other frameworks and languages.
+
+5. dplyr is faster than Base R for nearly all data frame operations
+
+### What are the disadvantages of the Tidyverse?
+
+In general, Tidyverse packages value the clarity and ease-of-use of non-standard interfaces (e.g. referring to a column as `Sepal.Width` instead of having to quote it as "Sepal.Width"). While this makes the functions easier to approach, it also makes it a little trickier to write your own functions that work with them.
+
+Regarding `dplyr`, the core data manipulation package, it is faster than base R but slower than other solutions like data.table. This is usually not a problem for ecologists even with metabarcoding data; if you need something faster, you will know it very quickly. You can use data.table keyed structures with dplyr for a speed improvement, or use `data.table` for expensive operations and `dplyr` for everything else, or transition to `data.table` entirely.
+
+## The pipeline
+
+### What does the pipe \%>\% do?
+
+```{r}
+library(dplyr) # dplyr imports the pipe '%>%' from the package 'magrittr'.
+# 'warpbreaks' is a built-in dataset gives the number of warp breaks on 9 looms for
+# 6 combinations of wool type (A and B) and thread tension (L, M, H).
+head(warpbreaks)
+```
+
+```{r}
+warpbreaks %>%
+group_by(wool, tension) %>%
+summarise_at(vars(breaks), list(~mean(.), ~median(.), ~sd(.)))
+```
+
+The pipe operator %>% means, “Take the output from the thing to my left, and deliver it as input to the thing on my right.” When you chain functions together with the pipe, it is called a pipeline.
+
+```{r}
+library(stringr)
+"ATMOSPHERE" %>% str_replace("SPHERE", "SQUARE") %>% str_to_lower() %>% print()
+```
+
+Spacing and linebreaks around the pipes do not matter (except for readability), and the pipes can be used with any function, not just the ones that come with Tidyverse packages. Here are some base R functions:
+
+```{r}
+month.abb %>% # Built-in dataset of month names (Jan, Feb...)
+sample(6) %>% # Randomly choose 6 months
+tolower() %>% # Lowercase their names
+paste0(collapse = "|") # And combine them into one string, separated by '|'
+```
+
+In both examples, the process of what is happening to the initial data is easy to follow and reads nearly like a sequence of steps in a recipe. In base R without pipes, the sequence of functions actually reads in reverse of what is happening:
+
+```{r}
+paste0(tolower(sample(month.abb, 6)), collapse = "|")
+```
+
+### Using the pipe
+
+#### The pipe outputs to the first argument by default**
+
+In the simplest sense, %>% assigns the output of the left-hand side to . (hereafter dot for readability) and then puts dot in the first argument of the left-hand side.
+
+```{r}
+. <- c(1, 3, 4, 5, NA)
+mean(., na.rm = TRUE)
+# Is doing the same thing as
+c(1, 3, 4, 5, NA) %>% mean(., na.rm = TRUE)
+```
+
+You don’t need to type dot for the first argument; it’s there implicitly. This manual omits the first dot unless it makes the code more understandable, in keeping with the Tidyverse Style Guide.
+
+```{r}
+                  # Implicit dot
+                  #        ↓
+c(1, 3, 4, 5, NA) %>% mean(na.rm = TRUE)
+```
+
+#### The output can be used more than once on the right-hand side
+
+dot can be used multiple times in the right-hand function call:
+
+```{r}
+c(1, 3, 4, 5) %>% plot(., main = paste(., collapse = ", "))
+```
+
+You don’t need to write the first dot, but subsequent uses of dot must be written.
+
+```{r}
+c(1, 3, 4, 5) %>% plot(main = paste(., collapse = ", "))
+```
+
+#### Functions from pipelines
+
+Sometimes you may want to write anonymous functions inside a pipeline. You can use the shorthand {...} to do it.
+
+```{r}
+month.abb %>%
+{.[1:3]}
+# Is identical to
+month.abb %>%
+(function(.) {.[1:3]})
+```
+
+#### Pipeline-friendly aliases for common actions
+
+You may want to access the contents of dot by using [ or [[ or $. For example, perhaps you have subsetted a data frame, and you want to view the values of one of the columns in a histogram. You can use these functions in their prefix form, but it’s not easy to read:
+
+```{r}
+iris %>%
+filter(Petal.Length > 2, Petal.Width > 2) %>%
+`[[`("Sepal.Length") %>%
+hist(main = "Histogram of 'Sepal.Length' after subsetting")
+```
+
+

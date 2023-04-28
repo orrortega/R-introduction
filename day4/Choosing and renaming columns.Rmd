@@ -1,0 +1,264 @@
+---
+title: "Choosing and renaming columns and rows"
+author: "Oscar Rodriguez de Rivera"
+date: "2023-04-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Choosing columns by name
+
+#### Manual naming
+
+You can choose columns using dplyr::select(). The most basic method of choosing columns is to name them:
+
+```{r}
+library(tidyverse)
+starwars %>%
+dplyr::select(name, height, mass) %>%
+glimpse()
+```
+
+Another method is to name a set of adjacent columns using the : operator, just as you would create a range of numbers from 1 to 4 with 1:4:
+
+```{r}
+starwars %>%
+    dplyr::select(name:mass) %>%
+    glimpse()
+```
+
+we can select all columns from `iris` that measure `Petal`, or all columns that measure `Length`, or any column that has a `.`:
+
+```{r}
+iris %>%
+dplyr::select(starts_with("Petal")) %>%
+glimpse()
+```
+
+```{r}
+iris %>%
+dplyr::select(ends_with("Length")) %>%
+glimpse()
+```
+
+```{r}
+iris %>%
+dplyr::select(contains(".")) %>%
+glimpse()
+```
+
+#### Reordering columns
+
+```{r}
+iris %>%
+dplyr::select(ends_with("Length"), Species, ends_with("Width")) %>%
+glimpse()
+```
+
+The `everything()` selector returns every column that isn’t already selected, which makes it useful for reordering a data frame’s columns:
+
+```{r}
+iris %>%
+    dplyr::select(Species, everything()) %>% # Reorder 'Species' to the first column
+    glimpse()
+```
+
+#### Omitting columns
+
+With any of the above methods, you can omit a column by putting a - in front of the selection:
+
+```{r}
+iris %>%
+    # Negate the selector to omit its results
+    #         ↓
+dplyr::select(-Species, -Petal.Length) %>%
+glimpse()
+```
+
+```{r}
+iris %>%
+dplyr::select(-ends_with("Length")) %>%
+glimpse()
+```
+
+### Choosing columns by value
+
+You can choose columns based on whether they satisfy a logical test by using the special verb `select_if()`. For example, we can choose columns by data type:
+
+```{r}
+starwars %>%
+select_if(is.numeric) %>% # Using the base R function is.numeric()
+glimpse()
+```
+
+Or we can choose columns that meet some arbitrary check by writing our own function that returns TRUE or FALSE:
+
+```{r}
+colSums(iris[1:4])
+```
+
+```{r}
+less_than_500 <- function(x) {
+sum(x) < 500
+}
+
+iris[1:4] %>%
+select_if(less_than_500) %>%
+glimpse()
+```
+
+We can use the tilde ($\sim$) as a shortcut to write an anonymous function, so the above could be expressed like this:
+
+```{r}
+iris[1:4] %>%
+select_if(~ sum(.) < 500) %>%
+glimpse()
+```
+
+### Renaming columns
+
+```{r}
+library(janitor)
+# Standardise names with janitor::clean_names()
+iris %>%
+clean_names() %>%
+names() # Print the column names
+```
+
+```{r}
+# Replace all names with purrr::set_names()
+iris %>%
+set_names("sep_len", "sep_wid", "pet_len", "pet_wid", "spp") %>%
+names()
+```
+
+```{r}
+# Replace some names with dplyr::rename()
+iris %>%
+rename(sep_length = Sepal.Length, sep_width = Sepal.Width) %>%
+names()
+```
+
+### Building a dataset with duplicated rows
+
+To illustrate subsetting, we will make a special version of the built-in starwars dataset that contains some duplicated rows:
+
+```{r}
+set.seed(896)
+sw_dup <-
+starwars %>%
+dplyr::select(-(films:starships)) %>% # Omit the last 3 columns (they are lists)
+sample_n(100, replace = TRUE) %>% # replace = TRUE to get duplicate rows.
+glimpse()
+```
+
+### Reordering rows
+
+```{r}
+sw_dup <-
+sw_dup %>%
+# Sort rows by homeworld, then species, then name.
+arrange(homeworld, species, name) %>%
+glimpse()
+```
+
+The default sorting order of arrange() is A-Z for Character columns and in increasing order for Numeric and Factor columns. To sort in the opposite direction, use desc():
+
+```{r}
+sw_dup %>%
+arrange(mass) %>% # Increasing quantity of mass
+glimpse()
+```
+
+```{r}
+sw_dup %>%
+arrange(desc(mass)) %>% # Decreasing mass
+glimpse()
+```
+
+### Removing duplicate rows
+
+Use dplyr::distinct() to remove duplicate rows. By default, it will remove a row if every one of its values is identical to a previous row’s values (i.e. it keeps the first instance of a duplicated row and discards the other copies).
+
+```{r}
+sw_dup %>%
+distinct() %>%
+glimpse() %>%
+anyDuplicated() # Returns 0 if there are no duplicate rows.
+```
+
+You can also choose the columns that are compared for duplication. By default it only returns the columns that were chosen; to return all of the columns, use the argument .keep_all = TRUE.
+
+```{r}
+sw_dup %>%
+distinct(species, homeworld) %>% # Only check 'species' and 'homeworld'
+glimpse() %>%
+anyDuplicated()
+```
+
+```{r}
+sw_dup %>%
+distinct(species, homeworld, .keep_all = TRUE) %>% # Keep all columns
+glimpse() %>%
+anyDuplicated()
+```
+
+### Removing rows with NAs
+
+Use `tidyr::drop_na()` to remove any row that contains an `NA`.
+
+```{r}
+sw_dup %>%
+drop_na() %>%
+glimpse() %>%
+anyNA() # Returns FALSE if there are no NAs in the data frame
+```
+
+Instead of looking for NAs inside every column, you can choose only some columns. NAs that occur outside the chosen columns will be ignored.
+
+```{r}
+sw_dup %>%
+drop_na(gender:species) %>%
+glimpse() %>%
+anyNA() # Returns TRUE because there are still NAs, e.g. in birth_year.
+```
+
+### Choosing rows by value
+
+One of the most important verbs in `dplyr` is `dplyr::filter()`, which is used to subset a data frame to return the rows that you’re interested in.
+
+```{r}
+# Find all of the Humans whose homeworld was not Earth
+sw_dup %>%
+filter(species == "Human", homeworld != "Earth") %>%
+distinct() %>%
+glimpse()
+```
+
+```{r}
+# Find everyone who is either a Droid OR whose homeworld is Tatooine
+sw_dup %>%
+filter(species == "Droid" | homeworld == "Tatooine") %>%
+distinct() %>%
+glimpse()
+```
+
+```{r}
+# Find every human who either has no recorded mass, or is taller than 180 cm
+sw_dup %>%
+filter(species == "Human", (is.na(mass) | height > 180)) %>%
+distinct() %>%
+glimpse()
+```
+
+```{r}
+# Find everyone who is 100-170 cm tall
+sw_dup %>%
+filter(between(height, 100, 170)) %>%
+distinct() %>%
+glimpse()
+```
+

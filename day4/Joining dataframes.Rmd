@@ -1,0 +1,101 @@
+---
+title: "Joining data frames together"
+author: "Oscar Rodriguez de Rivera"
+date: "2023-04-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This chapter covers how to join two data frames together. Although the examples that we present involve only two data frames at a time, they can be iterated with purrr to perform complex joins.
+
+### Classic row-binding and column-binding
+
+The most basic methods of joining data frames are to row-bind them by stacking their rows on top of each other (if their columns are identical), or column-bind them by putting their columns beside each other (if they have the same number of columns). In the Tidyverse, these are performed by dplyr::bind_rows() and dplyr::bind_rows() respectively. Their advantage over the base functions rbind() and cbind() is that you can pass many data frames to them at once:
+
+```{r}
+library(tidyverse)
+bind_rows(
+sample_n(iris, 10),
+sample_n(iris, 10),
+sample_n(iris, 10)
+) %>%
+glimpse() # 30 observations (i.e. rows)
+```
+
+```{r}
+bind_cols(
+sample_n(iris, 10),
+sample_n(iris, 10),
+sample_n(iris, 10)
+) %>%
+glimpse() # 15 variables (i.e. columns). Columns are given unique names.
+```
+
+### Joining data frames by value
+
+There are seven different kinds of join operations provided by dplyr, which you can read more of in ?dplyr::join. Here we draw attention to the three most useful ones:
+
+* left_join(x, y): Column-bind values from y to their matching rows in x.
+* semi_join(x, y): Only keep rows from x if they also appear in y.
+* anti_join(x, y): Only keep rows from x if they do not appear in y.
+
+
+```{r}
+sw_all <-
+starwars %>%
+dplyr::select(name, homeworld, species) %>% # More select() in the next chapter
+glimpse()
+```
+
+Then we will create a subset of starwars for use with semi_join() and anti_join(), and keep a different set of columns:
+
+```{r}
+set.seed(1287540661) # So we draw the same rows every time
+sw_subset <-
+starwars %>%
+dplyr::select(name, height:eye_color, species) %>%
+sample_frac(0.20) %>% # Pick 20 % of the total rows.
+glimpse()
+```
+
+Joining tables requires at least one column to be the same between them, but here we have two: name and species.
+
+#### Merge with left_join()
+
+The most-used method is left_join(), which can be used to merge data from two tables together. For example, we have extra information about 17 of our characters:
+
+```{r}
+left_join(x = sw_all, y = sw_subset) %>%
+glimpse()
+```
+
+By default, join operations will automatically try to use every identically-named column in both data frames, and then raise a message to tell you so. If you manually define the by argument, you can get control over this behaviour while removing this message:
+
+```{r}
+left_join(x = sw_all, y = sw_subset, by = "name") %>%
+glimpse()
+```
+
+#### Intersect with semi_join()
+
+Use semi_join() when you only want to keep rows that occur in two data frames.
+
+```{r}
+sw_all %>%
+    left_join(sw_subset, by = c("name", "species")) %>%
+    semi_join(sw_subset, by = "name") %>%
+    glimpse()
+```
+
+#### Difference with ‘anti_join()
+
+Use anti_join() when you only want to find rows that don’t occur in both data frames.
+
+```{r}
+anti_join(sw_all, sw_subset, by = c("name", "species")) %>%
+  glimpse()
+```
+

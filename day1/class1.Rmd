@@ -1,0 +1,142 @@
+---
+title: "Getting started with R and RStudio"
+author: "Oscar Rodriguez de Rivera"
+date: "24-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Within this module we are going to be introducing you to a computing language called R. You will also be making use of R within later modules during your degree course. We use an interface to R called RStudio which provides a more user-friendly setting in which to code. This worksheet will introduce you to some basic aspects of using R and RStudio. Work through each of the tasks below and answer the questions set.
+
+### Navigating RStudio
+
+### R Scripts and Loading Data into R
+
+When you have a small amount of data you can type data directly into R. The c( ) function in R is used to create a vector with values you provide explicitly. Suppose we wish to define a variable *X* to be a vector of numbers 1, 5, 6 and 10. To load this vector into R we would type:
+
+```{r}
+X <- c(1, 5, 6, 10)
+```
+
+Try typing the code above into the console window of RStudio (left hand window). These 4 values are then stored in an object named X and you can call them by typing:
+
+    X
+
+The command \< − means "is assigned", Y\<-10 is equivalent of saying variable Y takes the value 10. To call one of the elements of X we can do this using square brackets, [ ]. For example, try typing `X[2]`
+
+```{r}
+X[2]
+```
+
+in the console window, which calls the 2nd element of X, which is the value 5. You should see the following output: `[1] 5`
+
+[Exercise]{.underline}
+
+Download the R Script TestScript.R from moodle and save it in your working directory. It will appear as a text file. In RStudio, to convert it to an R Script, select the following tabs (top left): File $\rightarrow$ New File $\rightarrow$ RScript Copy and paste the commands into this file and save the file to your working directory using 'Save as'. Practice running the script. What does this R code do?
+
+The script file TestScript.R contains the following commands.
+
+```{r}
+Y1<-1:10 # The : command defines the integer values from 1 up to 10
+Y1
+```
+
+```{r}
+Y2<-11:20  # Here we define the integer values from 11 up to 20
+Y2
+```
+
+```{r}
+Y<-c(Y1,Y2)  # Y combines vectors Y1 and Y2 and we now have a new vector called
+Y              # Y which contains the integer values from 1 up to 20.
+```
+
+```{r}
+Z<-Y[-2]  # Z is defined to be the vector Y but with the 2nd element removed
+Z
+```
+
+```{r}
+Z[c(3,6,9)]  # Here we have called the 3rd, 6th and 9th element of vector Z
+```
+
+There are some sample data sets on moodle: birdexample.xls, Temperature.xls and parkrun.txt. Download these files from moodle into the folder you have set as your working directory.
+
+-   Load parkrun.txt into R. The data set is now stored in an object called parkrun.
+-   parkrun contains 3 variables: `Run_Number, Male and Female`
+
+Suppose we wish to define a vector, which we shall call PRmale, of the variable Male. We can do this by using the command:
+
+`PRmale<-parkrun$Male`
+
+-   Alternatively suppose we wish to be able to just call the variables directly without defining new variables, we can do this by attaching parkrun to our environment using the command
+
+`attach(parkrun)`
+
+Now you can simply call:
+
+`Male`
+
+-   Try loading the other two data sets, birdexample.xls and Temperature.xlsx into R and check that the variables have got appropriate names and that they have appeared in your R environment. Test calling the variables using the \$ option and using the attach command.
+
+### Exercises
+
+Write your answers to these exercises in an R Script file so that you can save it and re-run your code when you wish. If you wish to annotate your code with comments about what certain commands do you can use the \# command in your R Script file - anything on the line which appears after the \# will be ignored by R when the script is run.
+
+1.  Within this exercise you are going to learn about the function rep. Note to get more information about inbuilt R functions you can type the command
+
+`?rep`
+
+which will open the help file about function rep.
+
+a.  Use the function `c()` to define the vector *x* = (12, 3, 2, 6).
+b.  Enter the following function, what does it do?
+
+`rep(x,2)`
+
+c.  Enter the following function, what does it do?
+
+    `rep(x,c(2,2,2,2))`
+
+d.  What command would we use to get the following output?
+
+    `[1] 12 3 3 2 2 6 6 6`
+
+```{=html}
+<!-- -->
+```
+2.  Recall that a vector is an ordered set of values and the simplest way to define a vector is by the c() command. Define the vectors x and y:
+
+    `x<-c(1,2,3)`
+
+    `y<-c(0,1,2,3)`
+
+```{=html}
+<!-- -->
+```
+a.  Add 1 to each element of x by typing:
+
+    `x+1`
+
+b.  How would we obtain the following output?
+
+    `[1] 2 3 4 5`
+
+```{=html}
+<!-- -->
+```
+3.  Input the vector *v* = (3, 6, 9, 6). What do the following commands do?
+
+```{=html}
+<!-- -->
+```
+a.  1/v
+b.  max(v)
+c.  min(v)
+d.  sum(v)
+e.  prod(v)
+f.  sort(v)
+g.  order(v)

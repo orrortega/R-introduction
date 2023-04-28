@@ -1,0 +1,233 @@
+---
+title: "Hypothesis Testing 2"
+author: "Oscar Rodriguez de Rivera"
+date: "26-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this worksheet we will explore different ways to carry out hypothesis testing in R. We will study hypothesis tests to compare population means and variances. Finally, we will infer about the population proportion, $\pi$.
+
+### Hypothesis testing to compare population means and vari- ances assuming normal distributions
+
+Suppose we have two independent random samples and we want to test whether they come from the same population or whether they have any differences. For example we may have data from different countries and we want to find out if there are differences across regions e.g. Europe, Asia, Africa, Americas and Oceania.
+
+Consider two random samples: $X_{11},X_{12},...,X_{1n_1}$ from population 1 and $X_{21},X_{22},...,X_{2n_2}$ from population 2, from the $X_{1i} ∼ N(\mu_1,\sigma_1^2)$ and $X_{2j} ∼ N(\mu_2,\sigma_2^2)$ distribution, respectively. To make inferences about the difference in population means, $\mu_{1} − \mu_{2}$, that is to test the hypothesis
+
+$$
+\text{H}_{0}: \mu_{1}-\mu_{2} = \mu_{0} \ \ \  versus \ \ \  \text{H}_1:  \mu_{1}-\mu_{2} \neq \mu_{0}
+$$
+
+we use the result:
+
+$$
+T = \frac{\bar{X_1}-\bar{X_2}-\mu_0}{\sqrt{\frac{\sigma_1^2}{n_1}+\frac{\sigma_2^2}{n_2}}} \sim N(0,1)
+$$
+
+and we reject $\text{H}_0$ if $|T| > z_{\alpha/2}$
+
+When the variances are unknown, providing we can assume they are equal, the result becomes
+
+$$
+T = \frac{\bar{X_1}-\bar{X_2}-\mu_0}{\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}} \sim t_{n_1+n_2-2},
+$$
+
+where
+
+$$
+S^{2} = \frac{(n_1-1)S_1^2 + (n_2-1)S_2^2}{n_1+n_2-2} ,
+$$
+
+and we reject $\text{H}_0$ if $|T| > t_{n_1+n_2-2,\alpha/2}$
+
+To test whether the variances are different, we set
+
+$$
+\text{H}_{0}: \sigma_{1}^2 = \sigma_{2}^2 \ \ \  versus \ \ \  \text{H}_1:  \sigma_{1}^2 \neq \sigma_{2}^2 
+$$
+
+and use the result
+
+$$
+R = \frac{S_1^2}{S_2^2} \sim F_{n_1,n_2-1},
+$$
+to reject $\text{H}_0$ if $R < F_{n_1,n_2-1,1-\alpha/2}$ or $R > F_{n_1,n_2-1,1-\alpha/2}$
+
+-   [**Exercise 1.1**]{.underline}
+
+Consider the following data for the daily protein intake (in grams) on a sample of indi- viduals living below the poverty level and another sample of individuals living above the poverty level: 
+
+Below poverty level: 51.4, 49.7, 72.0, 76.7, 65.8, 55.0, 73.7, 62.1, 79.7, 66.2, 75.8, 65.4, 65.5, 62.0, 73.3 
+
+Above poverty level: 86.0, 69.0, 59.7, 80.2, 68.6, 78.1, 98.6, 69.8, 87.7, 77.2
+
+Test whether there are differences in the population means and in the variances.
+
+**Solution**
+
+Enter the data:
+
+```{r}
+x1<-c(51.4,49.7,72.0,76.7,65.8,55.0,73.7,62.1,79.7,66.2,75.8,65.4,65.5,62.0,73.3) 
+x2<-c(86.0, 69.0, 59.7, 80.2, 68.6, 78.1, 98.6, 69.8, 87.7, 77.2)
+```
+
+First test to confirm that the variances of the two populations can be assumed to be equal.
+
+```{r}
+var.test(x1,x2) #or var.test(x1,x2,ratio=1), but ratio=1 is assumed if omitted
+```
+
+The p-value of 0.4598 for the F-test shows that there is no evidence of a difference in the population variances. so there is no evidence that the two variances differ.
+
+Now test for a difference in the population means:
+
+```{r}
+t.test(x1,x2,conf.level=0.95,var.equal = TRUE)
+```
+
+The p-value of 0.0121 for the 2-sample t-test shows that there is evidence at the 5\% level, but not at the 1\% level, that the means are different.
+
+### Hypothesis testing for the population proportion
+
+For a proportion $\pi$ we test the hypothesis
+
+$$
+\text{H}_{0}: \pi = \pi_0 \ \ \  versus \ \ \  \text{H}_1:  \pi \neq \pi_0
+$$
+
+Using the Central Limit Theorem, we know that under $\text{H}_0$,
+
+$$
+T = \frac{\hat{\pi}-\pi_{0}}{\sqrt{\pi_{0}(1-\pi_{0})/n}} \sim \text{N}(0,1)
+$$
+
+and so we reject $\text{H}_0$ at the $100(1-\alpha)\%$ level if $|T| > z_{\alpha/2}$.
+
+-   [**Exercise 2.1**]{.underline}
+
+Suppose we want to know whether the proportion of the population who believe that the government’s policies will boost the economy has changed over the last 6 months. A previous survey has shown that p = 0.52 of the people agree with the government’s policies. A new survey takes places now which gives us a random sample of size n = 1000. The new survey shows that 567 people are positive that the economy will grow following the proposed economic policies. Test at the 1\% significance level whether the current proportion of people who agree with the government’s policies is different from 0.52.
+
+**Solution:**
+
+A point estimate for the population proportion is the sample proportion denoted by $\hat{\pi} = \frac{567}{1000}$
+
+The hypothesis test here is:
+
+$$
+\text{H}_{0}: \pi = 0.52 \ \ \  versus \ \ \  \text{H}_1:  \pi \neq 0.52
+$$
+
+1. Set p equal to the sample proportion of people in the new survey who are positive that the economy will grow
+
+2. Set pi0 to the value of π under the null hypothesis
+
+3. Set n equal to 1000, the sample size
+
+4. Calculate the value of the test statistic (you should get 2.974922)
+
+5. Set alpha to 0.01 for a 1\% significance level
+
+6. Find the critical values from the standard normal distribution using qnorm(1-alpha/2)
+
+7. What do you conclude?
+
+```{r eval=FALSE, include=FALSE}
+p <- 567/1000
+pi0 <- .52
+n <- 1000
+z <- (p-pi0)/sqrt(pi0*(1-pi0)/n)
+z
+```
+
+```{r eval=FALSE, include=FALSE}
+alpha <- .01
+z.alpha.half <- qnorm(1-alpha/2)
+c(-z.alpha.half, z.alpha.half)
+```
+
+```{r eval=FALSE, include=FALSE}
+Hence, the test statistic is significant at the 1\% level and therefore there is strong evidence that the proportion of people who are positive the economy will grow is different from 0.52. As the point estimate is greater than 0.52, we can conclude that the proportion is greater than 0.52.
+```
+
+We can also use the `prop.test()` function
+
+```{r eval=FALSE, include=FALSE}
+prop.test(x=567, n=1000, p=.52)
+```
+
+### Exercises
+
+-   [**Exercise 3.1**]{.underline}
+
+A car hire firm is trying to decide which kind of tyre to use. It has narrowed the choice down to two types, A and B. Randomly selected samples of tyres of each type were tested to destruction on a machine. The numbers of hours to failure are:
+Tyre A: 3.82, 3.11, 4.21, 2.64, 4.16, 3.91, 2.44, 4.52.
+Tyre B: 4.16, 3.02, 3.94, 4.22, 4.15, 4.92, 4.11, 5.45, 3.65.
+Test, using R, whether there appears to be a difference in the variances of time to failure for tyres of types A and B. Test at a 10% significance level for a difference between the mean times to failure for tyres of types A and B. Find also a 99% confidence interval for the difference in population means.
+
+```{r eval=FALSE, include=FALSE}
+tyreA<-c( 3.82, 3.11, 4.21, 2.64, 4.16, 3.91, 2.44, 4.52)
+tyreB<-c(4.16, 3.02, 3.94, 4.22, 4.15, 4.92, 4.11, 5.45, 3.65)
+var.test(tyreA,tyreB)
+```
+
+```{r eval=FALSE, include=FALSE}
+There is no evidence of a difference between the variances for the two types of tyres, so we can assume equal variances and test for a difference in means.
+```
+
+```{r eval=FALSE, include=FALSE}
+t.test(tyreA,tyreB,conf.level = .99,var.equal = TRUE)
+```
+
+```{r eval=FALSE, include=FALSE}
+Hence, with a p-value of 0.1245, there is no evidence of a difference in the mean lifetimes of the two types of tyre. We can be 99\% confident that the population mean difference (for Tyre A - Tyre B) lies between -1.626 and 0.469 hours. (The interval contains 0, which is consistent with the fact that a difference of 0 is not rejected at the 1\% significance level.)
+```
+
+-   [**Exercise 3.2**]{.underline}
+
+Suppose that a survey taken of a random sample of 40 students gives that the sample proportion is $\hat{p}$ = 0.55. The same survey is repeated and a random sample of 400 students gives the same values for $\hat{p}$. Historically we know that the student proportion is 0.42. For each survey, test whether there has been a change in the student proportion. Compare the results you got from the two tests.
+
+```{r eval=FALSE, include=FALSE}
+prop.test(x=22,n=40,p=.42)
+```
+
+```{r eval=FALSE, include=FALSE}
+prop.test(x=220,n=400,p=.42)
+```
+
+```{r eval=FALSE, include=FALSE}
+For the survey with 400 students the standard error of the sample proportion is smaller (the sample proportion is a more precise estimator for the true proportion) than for the survey with only 40 students. For the larger survey there is strong evidence of a change from 0.42. This is not evident from the smaller survey.
+```
+
+-   [**Exercise 3.3**]{.underline}
+
+Consider the anorexia dataset. Hint: use 
+```{r}
+library("MASS")
+data(anorexia)
+```
+
+1. Calculate the change in weight for each individual, diff = Postwt-Prewt.
+
+2. Carry out a 1-sample t-test on this sample of differences to test at a 5\% significance level whether the average weight of patients increases after the treatment they receive. (Note: you need to use a 1-tail test.)
+
+An hypothesis test on the differences is called a paired t-test. It is used when two measurements are made on a single sample of individuals.
+
+```{r eval=FALSE, include=FALSE}
+library("MASS")
+data(anorexia)
+attach(anorexia)
+diff = Postwt-Prewt
+diff
+```
+
+```{r eval=FALSE, include=FALSE}
+t.test(diff, mu=0, alternative="greater")
+```
+
+```{r eval=FALSE, include=FALSE}
+Hence there is strong evidence (significant at the 1% level but not quite at the 0.1% level) of an increase in mean weight after treatment.
+```
