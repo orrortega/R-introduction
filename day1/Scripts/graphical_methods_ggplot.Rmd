@@ -1,0 +1,692 @@
+---
+title: "Graphical methods with ggplot"
+author: "Oscar Rodriguez de Rivera"
+#date: "24-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to ggplot
+
+#### A simple example
+
+-   The functions in the ggplot2 package build up a graph in layers.
+-   We'll build a a complex graph by starting with a simple graph and adding additional elements, one at a time.
+
+We are going to download data from the III Forest Inventory (Murcia)
+
+```{r echo=TRUE}
+##load data
+FI_Murcia <- read.csv("~/Dropbox/Rcourse/day1/FI_Murcia.csv")
+attach(FI_Murcia)
+names(FI_Murcia)
+```
+
+```{r, echo=TRUE, fig.align='center', fig.cap="Map variables", message=FALSE, warning=FALSE, out.width="75%"}
+##specify dataset and mapping
+library(ggplot2) 
+ggplot(data = FI_Murcia,
+  mapping = aes(x = Diameter1, y = Height))
+```
+
+We need to specify what we wanted placed on the graph
+
+```{r, echo= TRUE, message=FALSE, warning=FALSE, out.width="75%", fig.align = 'center'}
+##add geom_point
+library(ggplot2) 
+ggplot(data = FI_Murcia,
+  mapping = aes(x = Diameter1, y = Height))+
+  geom_point()
+```
+
+We can change the color with `color`
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, out.width="75%", fig.align = 'center'}
+##make points blue, larger, and semi-transparent
+ggplot(data = FI_Murcia,
+mapping = aes(x = Diameter1, y = Height)) +
+  geom_point(color = "cornflowerblue", alpha = .7,
+  size = 3)
+```
+
+And also we can add a trend line (in this case it's not really informative :( )
+
+```{r echo=TRUE, fig.align='center', message=FALSE, warning=FALSE, out.width="75%"}
+##add a line of best fit
+ggplot(data = FI_Murcia,
+mapping = aes(x = Diameter1, y = Height)) +
+  geom_point(color = "cornflowerblue", alpha = .7, size = 3) + 
+  geom_smooth(method = "lm")
+```
+
+Also, we can differentiate different levels to plot them separately
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, out.width="75%", fig.align='center'}
+##indicate species using color
+FI_Murcia_sub = subset(FI_Murcia, Species == c("Castanea sativa", "Fagus sylvatica", "Pinus nigra", "Quercus robur"))
+ggplot(data = FI_Murcia_sub, 
+mapping = aes(x = Diameter1, y = Height, color = Species)) + 
+  geom_point(alpha = .7, size = 3) + 
+  geom_smooth(method = "lm", se = FALSE, size = 1.5)
+```
+
+And also, we can plot different charts for each species
+
+```{r echo=TRUE, fig.align='center', message=FALSE, warning=FALSE, out.width="75%"}
+# reproduce plot for each species
+ggplot(data = FI_Murcia_sub, 
+mapping = aes(x = Diameter1, y = Height)) + 
+  geom_point(alpha = .7) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_x_continuous(breaks = seq(0, 2, 0.5)) + 
+  scale_y_continuous(breaks = seq(0, 60, 10)) + 
+  scale_color_manual(values = c("indianred3","cornflowerblue")) +
+  facet_wrap(~Species)
+```
+
+## Univariate Graphs - Categorical
+
+```{r include=FALSE}
+FI_Murcia <- read.csv("~/Dropbox/Rcourse/day1/FI_Murcia.csv")
+attach(FI_Murcia)
+FI_Murcia_sub = subset(FI_Murcia, Species == c("Castanea sativa", "Fagus sylvatica", "Pinus nigra", "Quercus robur"))
+```
+
+**Plot the distribution of species**
+
+```{r echo=TRUE,fig.asp=2/3}
+library(ggplot2)
+ggplot(FI_Murcia_sub, aes(x = Species)) + 
+  geom_bar()
+```
+
+**Plot the distribution of species with modified colors and labels**
+
+```{r echo=TRUE,fig.asp=2/3}
+ggplot(FI_Murcia_sub, aes(x = Species)) + 
+  geom_bar(fill = "cornflowerblue", color="black") + 
+  labs(x = "Species", y = "Frequency", 
+       title = "Individuals by species")
+```
+
+**Plot the distribution as percentages**
+
+```{r echo=TRUE,fig.asp=2/3}
+ggplot(FI_Murcia_sub, aes(x = Species, y = ..count.. / sum(..count..))) + 
+  geom_bar() + labs(x = "Species", y = "Percent", 
+                    title = "Individuals by species") + 
+  scale_y_continuous(labels = scales::percent)
+```
+
+**Calculate number of participants in each species category**
+
+```{r echo=TRUE,fig.asp=2/3}
+library(dplyr)
+plotdata <- FI_Murcia_sub %>%
+  count(Species)
+plotdata
+```
+
+**Plot the bars in ascending order**
+
+```{r echo=TRUE,fig.asp=2/3}
+# plot the bars in ascending order
+ggplot(plotdata, aes(x = reorder(Species, n), y = n)) + 
+  geom_bar(stat = "identity") +
+  labs(x = "Species", y = "Frequency", 
+       title = "Individuals by species")
+```
+
+**Plot the bars in descending order**
+
+```{r echo=TRUE,fig.asp=2/3}
+ggplot(plotdata, aes(x = reorder(Species, -n), y = n)) + 
+  geom_bar(stat = "identity") +
+  labs(x = "Species", y = "Frequency", 
+       title = "Individuals by species")
+```
+
+**plot the bars with numeric labels** `geom_text` adds the labels, `vjust` controls vertical justification
+
+```{r echo=TRUE,fig.asp=1/2}
+
+ggplot(plotdata, aes(x = reorder(Species, n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  geom_text(aes(label = n), vjust=-0.5) +
+  labs(x = "Species", y = "Frequency", 
+       title = "Individuals by species")
+```
+
+```{r}
+plotdata <- FI_Murcia_sub %>% count(Species) %>% mutate(pct = n / sum(n),
+pctlabel = paste0(round(pct*100), "%"))
+```
+
+**Plot the bars as percentages, in descending order with bar labels**
+
+```{r}
+ggplot(plotdata, aes(x = reorder(Species, -pct), y = pct)) +
+  geom_bar(stat = "identity", fill = "indianred3", color = "black") + 
+  geom_text(aes(label = pctlabel), vjust = -0.25) + 
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Species", y = "Percent", title = "Individuals by species")
+```
+
+#### Overlapping labels
+
+**Horizontal bar chart**
+
+```{r}
+ggplot(FI_Murcia_sub, aes(x = Species)) + 
+  geom_bar() +
+  labs(x = "", y = "Frequency", title = "Individuals by shape") + coord_flip()
+```
+
+## Univariate Graphs - Quantitative
+
+### Histogram
+
+**Plot the age distribution using a histogram**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE ,fig.asp=1/2}
+ggplot(FI_Murcia_sub, aes(x = Height)) + geom_histogram() +
+  labs(title = "Individuals by Height", x = "Height")
+```
+
+**Plot the histogram with blue bars and white borders**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(FI_Murcia_sub, aes(x = Height)) + 
+  geom_histogram(fill = "cornflowerblue", color = "white") + 
+  labs(title = "Individuals by Height", x = "Height")
+```
+
+**Plot the histogram with 20 bins**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(FI_Murcia_sub, aes(x = Height)) + 
+  geom_histogram(fill = "cornflowerblue", color = "white", bins = 20) + 
+  labs(title="Individuals by Height", subtitle = "number of bins = 20", x = "Height")
+```
+
+**Plot the histogram with a binwidth of 5**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+ggplot(FI_Murcia_sub, aes(x = Height)) + 
+  geom_histogram(fill = "cornflowerblue", color = "white", binwidth = 5) + 
+  labs(title="Individuals by Height", subtitle = "binwidth = 5 meters", x = "Height")
+```
+
+**Plot the histogram with percentages on the y-axis**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(scales) 
+ggplot(FI_Murcia_sub, aes(x = Height, y= ..count.. / sum(..count..))) +
+  geom_histogram(fill = "cornflowerblue", color = "white", binwidth = 5) + 
+  labs(title="Individuals by Height", y = "Percent", x = "Height") + 
+  scale_y_continuous(labels = percent)
+```
+
+There are more things to add some "fantasy" to your plots as:
+
+-   Kernel density plot
+-   Dotplot
+-   etc.
+
+## Bivariate Graphs
+
+### Categorical vs Categorical
+
+**Stacked bar chart**
+
+```{r echo=TRUE, fig.asp=1/2}
+FI_Murcia_sub$Shape<- as.factor(FI_Murcia_sub$Shape)
+ggplot(FI_Murcia_sub,
+aes(x = Species,
+fill = Shape)) + geom_bar(position = "stack")
+```
+
+From the chart, we can see for example, that the most common species is F. sylvatica. An the most common shape for all the species is 2
+
+Stacked is the default, so the last line could have also been written as `geom_bar()`.
+
+**Grouped bar chart**
+
+```{r echo=TRUE, fig.asp=1/3}
+ggplot(FI_Murcia_sub,
+      aes(x = Species,
+          fill = Shape)) + geom_bar(position = "dodge")
+```
+
+By default, zero count bars are dropped and the remaining bars are made wider. This may not be the behavior you want. You can modify this using the `position = position_dodge(preserve = "single")` option.
+
+```{r echo=TRUE, fig.asp=2/3}
+ggplot(FI_Murcia_sub,
+      aes(x = Species,
+          fill = Shape)) + 
+        geom_bar(position = position_dodge(preserve="single"))
+```
+
+**Segmented bar chart**
+
+```{r echo=TRUE, fig.asp=2/3}
+FI_Murcia_sub$Shape<- as.factor(FI_Murcia_sub$Shape)
+ggplot(FI_Murcia_sub,
+      aes(x = Species,
+          fill = Shape)) + 
+        geom_bar(position = "fill") + labs(y="Proportion")
+```
+
+This type of plot is particularly useful if the goal is to compare the percentage of a category in one variable across each level of another variable.
+
+### Quantitative vs Quantitative
+
+The simplest display of two quantitative variables is a scatterplot, with each variable represented on an axis.
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+aes(x = Diameter1, y = Height)) + 
+  geom_point()
+```
+
+**Scatterplot with linear fit line**
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+aes(x = Diameter1, y = Height)) + 
+  geom_point(color="steelblue") +
+  geom_smooth(method = "lm")
+```
+
+Clearly, Height increases with Diameter. However a straight line does not capture this non-linear effect. A polynomial regression line will fit better here.
+
+**Scatterplot with quadratic line of best fit**
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+aes(x = Diameter1, y = Height)) + 
+  geom_point(color="steelblue") +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2),
+  color = "indianred3")
+```
+
+Finally, a smoothed nonparametric fit line can often provide a good picture of the relationship. The default in **`ggplot2`** is a loess line which stands for for locally weighted scatterplot smoothing.
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+aes(x = Diameter1, y = Height)) + 
+  geom_point(color = "steelblue") +
+  geom_smooth(color = "tomato")
+```
+
+#### Line plot
+
+When one of the two variables represents time, a line plot can be an effective method of displaying relationship.
+
+```{r echo=TRUE, fig.asp=1/2}
+library(curl)
+rats <- read.csv("~/Dropbox/Rcourse/day1/Rats.csv")
+ggplot(rats, 
+       aes(x = time, y = captures)) + 
+  geom_line()
+```
+
+**Line plot with points and improved labeling**
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(rats,
+  aes(x = time, y = captures)) +
+geom_line(size = 1.5, color = "lightgrey") + geom_point(size = 3, color = "steelblue") +
+labs(y = "Individuals captured", x = "Ocasion",
+title = "Removal method data", subtitle = "An Attempt to Determine the Absolute Number of Rats on a Given Area",
+caption = "Leslie and Davies (1939)")
+```
+
+### Categorical vs Quantitative
+
+When plotting the relationship between a categorical variable and a quantitative variable, a large number of graph types are available.
+
+These include bar charts using summary statistics, grouped kernel density plots, side-by-side box plots, side-by-side violin plots, and Cleveland plots.
+
+#### Bar chart (on summary statistics)
+
+```{r echo=TRUE, fig.asp=1/2, message=FALSE}
+# calculate mean height for each species
+plotdata <- FI_Murcia_sub %>%
+    group_by(Species) %>% 
+    summarize(mean_Height = mean(Height))
+# plot mean height
+ggplot(plotdata, 
+       aes(x = Species, y = mean_Height)) + 
+  geom_bar(stat = "identity")
+```
+
+**Plot mean heights in a more attractive fashion**
+
+```{r echo=TRUE, fig.asp=2/3}
+library(scales) 
+ggplot(plotdata,
+      aes(x = factor(Species,
+          labels = c("Castanea\nsativa", "Fagus\nsylvatica", "Pinus\nnigra", "Quercus\nrobur")), y = mean_Height)) +
+    geom_bar(stat = "identity", fill = "cornflowerblue") +
+    geom_text(aes(label = round(mean_Height, 2)), 
+      vjust = -0.2) +
+  labs(title = "Mean Height by tree species",
+    subtitle = "National Forest Inventory (Murcia)", x = "",
+    y = "m")
+```
+
+#### Grouped kernel density plots
+
+One can compare groups on a numeric variable by superimposing kernel density plots in a single graph.
+
+**By rank using kernel density plots**
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+    aes(x = Height, fill = Species)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Height distribution by species")
+```
+
+`alpha` values range from 0 (transparent) to 1 (opaque)
+
+#### Box plots
+
+**Plot the distribution of height by species using boxplot**
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+      aes(x = Species, y = Height)) + 
+  geom_boxplot() +
+labs(title = "Height distribution by species")
+```
+
+#### Violin plots
+
+Violin plots are similar to kernel density plots, but are mirrored and rotated 90$^\circ$ .
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+      aes(x = Species, y = Height)) +
+      geom_violin() +
+      labs(title = "Height distribution by species")
+```
+
+A useful variation is to superimpose boxplot on violin plots.
+
+```{r echo=TRUE, fig.asp=1/2}
+ggplot(FI_Murcia_sub,
+      aes(x = Species, y = Height)) +
+      geom_violin(fill = "cornflowerblue") + 
+      geom_boxplot(width = .2, fill = "orange", outlier.color = "orange", outlier.size = 2) +
+      labs(title = "Height distribution by species")
+```
+
+#### Cleveland Dot Charts
+
+Cleveland plots are useful when you want to compare a numeric statistic for a large number of groups.
+
+```{r echo=TRUE, fig.asp=2/3}
+plotdata<-FI_Murcia %>% 
+    group_by(Species) %>%
+    mutate(Mean = mean(Height, na.rm=TRUE))
+ggplot(plotdata,
+      aes(x = Mean, y = Species)) +
+      geom_point()
+```
+
+```{r echo=TRUE, fig.asp=2/3}
+ggplot(plotdata,
+      aes(x = Mean, y = reorder(Species,Mean))) +
+      geom_point()
+```
+
+## Multivariate Graphs
+
+### Grouping
+
+```{r include=FALSE}
+Fires <- read.csv("~/Dropbox/Rcourse/day1/Largest_fires_by_continent.csv")
+attach(Fires)
+```
+
+In grouping, the values of the first two variables are mapped to the x and y axes. Then additional variables are mapped to other visual characteristics such as color, shape, size, line type, and transparency. Grouping allows you to plot the data for multiple groups in a single graph.
+
+```{r echo=TRUE,fig.asp=1/2}
+library(ggplot2)
+ggplot(Fires, 
+      aes(x = speed..km.day.1., y=Size..km2.)) + 
+      geom_point() +
+      labs(title = "Size (km2) by speed (km/day)")
+```
+
+Next, let's include the Regions, using color.
+
+```{r echo=TRUE,fig.asp=2/3}
+ggplot(Fires, 
+      aes(x = speed..km.day.1., y=Size..km2., 
+      color = dominant.spread.direction)) + geom_point() +
+      labs(title = "Size (km2) by speed (km/day) and region")
+```
+
+Finally, let's add the shape of the trees, using the shape of the points to indicate shape. We'll increase the point size and add transparency to make the individual points clearer.
+
+```{r echo=TRUE,fig.asp=1/2}
+ggplot(Fires, 
+      aes(x = speed..km.day.1., y=Size..km2., 
+      color = dominant.spread.direction, shape = Region)) + geom_point() +
+      labs(title = "Size (km2) by speed (km/day), region and dominant spread direction")
+```
+
+```{r echo=TRUE,fig.asp=1/2}
+ggplot(Fires, 
+  aes(x = speed..km.day.1., y=Size..km2., color = Region)) + 
+  geom_point(alpha = .4, size = 3) +
+  geom_smooth(se=FALSE, method = "lm", formula = y~poly(x,2), size = 1.5) + 
+  labs(x = "Speed (km/day)", y = "Size (km2)", title = "Size (km2) by speed (km/day) and region", 
+    subtitle = "Summary of Large Forest Fires", y = "", color = "Regions") +
+    scale_color_brewer(palette = "Set1") + theme_minimal()
+```
+
+Grouping allows you to plot multiple variables in a single graph, using visual characteristics such as color, shape, and size.
+
+In **faceting**, a graph consists of several separate plots or small multiples, one for each level of a third variable, or combination of variables. It is easiest to understand this with an example.
+
+```{r echo=TRUE, fig.asp=2/3, message=FALSE}
+ggplot(Fires, aes(x = Size..km2.)) + geom_histogram(fill = "cornflowerblue",
+    color = "white") + facet_wrap(~Region, ncol = 1) +
+    labs(title = "Size (km2) by species")
+```
+
+The `facet_wrap` function creates a separate graph for each `species`. The `ncol` option controls the number of columns.
+
+
+```{r echo=TRUE, fig.asp=1/2, message=FALSE}
+ggplot(Fires, aes(x = Size..km2.)) + 
+  geom_histogram(fill = "cornflowerblue", color = "white") + 
+  facet_wrap(Region ~ dominant.spread.direction) +
+  labs(title = "Size histograms by Region")
+```
+
+The format of the `facet_grid` function is `facet_grid( row variable(s) ~ column variable(s))`
+
+
+```{r include=FALSE}
+library(dplyr)
+plotdata <- Fires %>% 
+  group_by(Region, year) %>%                            # multiple group columns
+  summarise(total = sum(Size..km2.), mean_size = mean(Size..km2.))  # multiple summary columns
+```
+
+```{r echo=TRUE,fig.asp=1/2}
+# plot total area by year, for each country
+ggplot(plotdata, aes(x=year, y = total)) + geom_line(color="grey") + 
+geom_point(color="blue") + facet_wrap(~Region) + theme_minimal(base_size = 9) + 
+theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+labs(title = "Changes in burned area",x = "Year",y = "Total area")
+```
+
+### Maps
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(rworldmap) 
+# get map
+MyMap <- ggplot() + borders("world", colour="black", fill="grey") + theme_bw()
+MyMap
+```
+
+```{r}
+MyMap  +
+  geom_point(data = Fires, aes(x=lon, y=lat),size = 2, color = "red")+
+  theme(panel.grid.major = element_line(color = "gray60", linetype = "dashed", size = 0.25), 
+        panel.background = element_rect(fill = "aliceblue"))
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(viridis)
+MyMap  + 
+  geom_point(data = Fires, aes(x=lon, y=lat, color = Size..km2.),size = 2) +
+  scale_color_viridis() +
+  theme(panel.grid.major = element_line(color = "gray60", linetype = "dashed", size = 0.25), 
+        panel.background = element_rect(fill = "aliceblue"))
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(viridis)
+MyMap  + coord_fixed(xlim=c(-10, 37.5), ylim=c(30, 48)) + 
+  geom_point(data = Fires, aes(x=lon, y=lat, color = Size..km2.),size = 2) +
+  scale_color_viridis() +
+  theme(panel.grid.major = element_line(color = "gray60", linetype = "dashed", size = 0.25), 
+        panel.background = element_rect(fill = "aliceblue"))
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE ,fig.asp=1/2}
+MyMap  + coord_fixed(xlim=c(-10, 37.5), ylim=c(30, 48)) + 
+  geom_point(data = Fires, aes(x=lon, y=lat, color = Size..km2.),size = 2) +
+  scale_color_viridis() +
+  facet_wrap(~year) +
+  theme(panel.grid.major = element_line(color = "gray60", linetype = "dashed", size = 0.25), 
+        panel.background = element_rect(fill = "aliceblue"))
+```
+
+### Time-dependent graphs
+
+#### Time series
+
+```{r include=FALSE}
+pm10 <- read.csv("~/Dropbox/Rcourse/day1/PM10London.csv")
+pm10$site<-as.factor(pm10$site)
+pm10subset <- subset(pm10, site == "Ealing - Hanger Lane Gyratory")
+attach(pm10subset)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.asp=2/3}
+ggplot(pm10subset, aes(x = day, y = pm10)) +
+      geom_line() +
+      labs(title = "Levels of pm10 during 2014", x = "Day of the year", y = "pm10 concentration")
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.asp=2/3}
+library(scales)
+ggplot(pm10subset, aes(x = day, y = pm10)) +
+    geom_line(color = "indianred3", size=1 ) +
+    geom_smooth() +  labs(title = "Pm10 levels", subtitle = "2014", x = "DOY", y = "pm10 concentration") +
+    theme_minimal()
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.asp=2/3}
+# multivariate time series
+attach(pm10)
+ggplot(pm10,
+    aes(x=day , y= pm10, color=site)) + geom_line(size=1) + 
+    labs(title = "pm10 levels London",
+    subtitle = "2014", caption = "source: OpenAir", y = "pm10 concentration") +
+    theme_minimal() + scale_color_brewer(palette = "Dark2")
+```
+
+### Area Charts
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.asp=2/3}
+ggplot(pm10subset, aes(x = day, y = pm10)) + 
+  geom_area(fill="lightblue", color="black") + 
+  labs(title = "pm10 levels", x = "day", y = "pm10 concentration")
+```
+
+A stacked area chart can be used to show differences between groups over time.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.asp=2/3}
+ggplot(pm10, aes(x = day, y = pm10, fill= site)) + 
+  geom_area() + 
+  labs(title = "pm10 levels", x = "day", y = "pm10 concentration")
+```
+
+### Statistical models
+
+#### Correlation plots
+
+The levels of the site variable can be reversed using the fct_rev function in the forcats package.
+
+```{r include=FALSE}
+FI_Murcia <- read.csv("~/Dropbox/Rcourse/day1/FI_Murcia.csv")
+attach(FI_Murcia)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+df <- dplyr::select_if(FI_Murcia, is.numeric)
+r <- cor(df, use="complete.obs") 
+round(r,2)
+```
+
+```{r echo=TRUE, fig.asp=2/3}
+library(ggcorrplot) 
+ggcorrplot(r)
+```
+
+By default, zero count bars are dropped and the remaining bars are made wider. This may not be the behavior you want. You can modify this using the `position = position_dodge(preserve = "single")` option.
+
+
+```{r echo=TRUE, fig.asp=2/3}
+ggcorrplot(r,
+            hc.order = TRUE,
+            type = "lower", lab = TRUE)
+```
+
+#### Linear Regression
+
+```{r echo=TRUE, fig.asp=1/2}
+Height_lm <- lm(Height ~ Diameter1 + Diameter2, data = FI_Murcia)
+library(visreg)
+#The visreg function takes (1) the model and (2) the variable of interest and plots 
+#the conditional relationship, controlling for the other variables. 
+#The option gg = TRUE is used to produce a ggplot2 graph.
+visreg(Height_lm, "Diameter1", gg = TRUE) +
+  labs(title = "Relationship between Height and Diameter1",
+  caption = "source:   NFI Murcia",
+y = "Height (m)",
+x = "Diameter (m)")
+```
+
+#### Logistic regression
+
+```{r include=FALSE, echo=TRUE, fig.asp=1/2}
+Chrod <- read.csv("~/Dropbox/Rcourse/day1/Chrodata.csv")
+library(tidyr)
+Chrod <- na.omit(Chrod)
+attach(Chrod)
+Chrod_glm <- glm(presence ~ altitude + Temperature..C. + Rainfall..mm. + Beaufort.scale,
+              family="binomial", data=Chrod)
+```
+
+```{r echo=TRUE, fig.asp=1/2}
+visreg(Chrod_glm, "altitude",
+    gg = TRUE,
+    scale="response") + labs(y = "Prob(Presence)", x = "Altitude",
+    title = "Relationship of Age and Presence")
+```

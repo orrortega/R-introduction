@@ -1,0 +1,143 @@
+---
+title: "Graphical methods 2"
+author: "Oscar Rodriguez de Rivera"
+#date: "24-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Within this worksheet we are going to continue looking at producing some basic graphs in R.
+
+### Histograms
+
+A histogram provides a visual representation of continuous data. The height of the bars in the histogram show how many of our sample data values occur in a particular interval.
+
+Suppose we have data on the distances (in miles) 42 employees of a particular company have to travel to work. These data are available as a text file called `distance.txt`. Load the data into R.
+
+To plot a basic histogram of these data in R we type:
+
+```{r}
+distance <- read.csv("~/Dropbox/Rcourse/day1/distance.txt", sep="")
+hist(distance$dist)
+```
+
+This plot has used all of the default settings. Type ?hist to investigate some of the other options within this function.
+
+-   [**Exercise 1.1**]{.underline}
+
+What commands would you use to change the histogram to plot the histogram in colour, with blue borders and orange fill?
+
+```{r}
+hist(distance$dist,col="orange",border="blue")
+```
+
+Suppose we want to put the breaks of the histogram at intervals of 7 miles rather than default 5. We can do this using the command:
+
+```{r}
+hist(distance$dist,breaks=c(0,7,14,21,28,35,42))
+```
+
+Alternatively, you can specify:
+
+```{r}
+hist(distance$dist,breaks=7)
+```
+
+Look at the help file to see what 'breaks=7' does.
+
+-   [**Exercise 1.2**]{.underline}
+
+The file `parkrun.txt` gives the finishing times of the fastest male and fastest female runners for 230 Canterbury parkruns (a 5km run which takes place every Saturday morning). Plot histograms for the male and female data and provide a commentary on the differences.
+
+Note if you are comparing two histograms it is often useful to set the axes of both graphs to have the same limits in order to make easier comparisons.
+
+**Solution**
+
+```{r eval=FALSE, include=FALSE}
+parkrun <- read.delim("~/Dropbox/Rcourse/day1/parkrun.txt")
+attach(parkrun)
+par(mfrow=c(1,2))
+hist(Male,main="Times for males",xlab="Time (seconds)",
+     xlim=c(900,1600),ylim=c(0,0.008),freq=FALSE)
+hist(Female,main="Times for females",xlab="Time (seconds)",
+     xlim=c(900,1600),ylim=c(0,0.008),freq=FALSE)
+```
+
+### Scatter plots
+
+A scatterplot displays the value of 2 sets of data on 2 dimensions. Each dot represents an observation. The position on the x (horizontal) and y (vertical) axis represents the values of the 2 variables. It is really useful to study the relationship between variables.
+
+We are going to use a data set called mtcars which is already available in R. Type ?mtcars to find out more about the data.
+
+We want to plot the weight variable versus the miles per gallon variable. Plot a chart for cars with weight between 2.5 and 5 and mileage between 15 and 30:
+
+```{r}
+par(mfrow=c(1,1))
+plot(mtcars$wt, mtcars$mpg, xlab = "Weight", ylab = "Mileage", xlim = c(2.5,5),
+   ylim = c(15,30), main="Weight vs Mileage")
+```
+
+When we have more than two variables and we want to examine the relationship between one variable versus the remaining ones we use a matrix of scatterplots. We use the `pairs()` function to create this.
+
+Let us consider the relationship between variables mtcars variables wt, mpg, disp and cyl:
+
+```{r}
+pairs(~wt+mpg+disp+cyl,data=mtcars,main="Scatterplot Matrix")
+```
+
+Consider what each of the plots shows -- note that we are displaying each graph twice.
+
+-   [**Exercise 2.1**]{.underline}
+
+We are going to explore the iris data set. Use the command ?iris to find out more about the data.
+
+-   Look at the first few rows of the iris data:
+
+```{r}
+head(iris)
+```
+
+-   Plot a scatter plot of the first 4 columns of data:
+
+```{r}
+pairs(iris[,1:4], pch = 19)
+```
+
+`pch` controls the symbol used. Find out more about this command using `?pch`. Adjust the pch variable to see what changes.
+
+-   This plot includes each graph twice -- to only show the plots the once we can use the following command:
+
+```{r}
+pairs(iris[,1:4], pch = 19, lower.panel = NULL)
+```
+
+-   Now suppose we want to colour points by groups (species).
+
+```{r}
+#dev.off() # removes the previous plot settings
+     my_cols <- c("orange", "blue", "green")
+     pairs(iris[,1:4], pch = 19, cex = 0.5, col = my_cols[iris$Species], lower.panel=NULL)
+     par(xpd = TRUE, oma=c(1,1,1,1))
+     legend("bottomleft",fill = unique(my_cols[iris$Species]),
+          legend=c("S1","S2","S3"),horiz=TRUE)
+```
+
+-   [**Exercise 2.2**]{.underline}
+
+The text file `temp_obs.txt` contains minimum air and ground temperatures taken over 93 nights. Use scatter plots to visualise the temperature data, using colour coding to distinguish between the different observers recording the measurements.
+
+**Solution**
+
+```{r eval=FALSE, include=FALSE}
+#dev.off()
+temp_obs <- read.delim("~/Dropbox/Rcourse/day1/temp_obs.txt")
+my_cols <- c("orange", "blue", "green","red")
+pairs(temp_obs[,1:4], pch = 19, cex = 0.5, col = my_cols[temp_obs$observer],
+    lower.panel=NULL)
+par(xpd = TRUE, oma=c(1,1,1,1))
+legend("bottomleft",fill = unique(my_cols[temp_obs$observer]),
+    legend=c("O1","O2","O3","O4"),horiz=TRUE)
+```
