@@ -1,0 +1,227 @@
+---
+title: "Numerical Descriptive Measures"
+author: "Oscar Rodriguez de Rivera"
+#date: "25-04-2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Within this worksheet we are going to learn how to use R to calculate numerical measures from a data set and also how to produce and interpret boxplots.
+
+### Measures of Location
+
+Data can be summarised using numerical measures such as the mean, median and mode. Consider the following data of the number of letters in a sample of 11 words from a page of text:
+
+3 2 10 5 9 4 2 6 3 4 3
+
+The mean is a very common measure of location and one advantage of it is that every data value is taken into account. However, the mean is sensitive to outliers in the data. To calculate the mean of this data set in R we type:
+
+```{r}
+Letters<-c(3,2,10,5,9,4,2,6,3,4,3)
+mean(Letters)
+```
+
+Note that if your data contains any missing values, denoted by NA, the function mean will return NA by default. To get R to ignore the NA values you use the command:
+
+```{r}
+mean(Letters,na.rm=TRUE)
+```
+
+The median is the middle value in a data set that has been ordered from smallest to largest. To calculate this in R:
+
+```{r}
+median(Letters)
+```
+
+The mode of a data set is the value that occurs most frequently. Note that some data sets may have more than one mode, or may have none at all. There is no function in R which computes the mode. Instead we can tabulate the data:
+
+```{r}
+y<-table(Letters)
+```
+
+And then report which of the tabulated values has the highest frequency:
+
+```{r}
+names(y)[which(y==max(y))]
+```
+
+-   [**Exercise 1.1**]{.underline}
+
+The following are the ages (in years) of all eight employees of a small company: 53, 32, 61, 27, 39, 44, 49, 57. Calculate the mean and median of this data set.
+
+**Solution**
+
+```{r eval=FALSE, include=FALSE}
+Age<-c(53,32,61,27,39,44,49,57)
+mean(Age)
+median(Age)
+```
+
+### Measures of Location
+
+Measures of location summarise a data set with one number, but they do not tell us everything about a distribution.
+
+Consider the overall percentages children from School A and School B achieved in several tests. The data are stored in an excel file called school which can be downloaded from moodle. Load the data into R and plot histograms of these data using R:
+
+```{r}
+setwd("~/Dropbox/Rcourse")
+library(readxl)
+school <- read_excel("day2/school.xlsx")
+attach(school)
+par(mfrow=c(2,1))
+hist(schoolA,breaks=10,main="Histogram showing students overall percentage (School A)",
+  xlab="overall percentage")
+hist(schoolB,breaks=10,main="Histogram showing students overall percentage (School B)",
+  xlab="overall percentage")
+```
+
+The mean overall percentage is 60 for both schools (check this in R), but the histograms clearly show the distributions are different; there is a much larger variation of values in School A compared to School B.
+
+We need measures of dispersion to provide information on the variation in a data set. The range is the difference between the largest and smallest values in a dataset.
+
+```{r}
+range_A <- max(schoolA)-min(schoolA)
+range_B <- max(schoolB)-min(schoolB)
+```
+
+The function `summary` evaluates the minimum, lower quartile, median, mean, upper quartile and max- imum of a data set. All of these values, except for the mean, are the values which are required for a boxplot to be plotted.
+
+```{r}
+summary(schoolA)
+boxplot(schoolA,main="School A",ylab="overall percentage")
+```
+
+-   [**Exercise 2.1**]{.underline}
+
+We are going to see how to define multiple boxplots on the same plot. We are going to use inbuilt data set mtcars. Type `?mtcars` to find out more about the data set.
+
+To see the first few rows of the data set we can type
+
+```{r}
+head(mtcars)
+```
+
+Create a box plot for vehicle weight for each type of car:
+
+```{r}
+boxplot(wt~cyl,data=mtcars,main="Vehicle Weight",xlab="Number of Cylinders",ylab="Weight")
+```
+
+Investigate other boxplots you can make of this data set.
+
+Recall that the sample variance, $s^2$, and sample standard deviation, $s$ explain how much variation there is in the data. To calculate them in R we use the function sd().
+
+-   [**Exercise 2.2**]{.underline}
+
+Calculate the standard deviation of the School B data. What can you conclude about the data from the 2 schools?
+
+**Solution**
+
+```{r eval=FALSE, include=FALSE}
+sd(schoolA)
+sd(schoolB)
+```
+
+The results from school A are more variable than the results from school B as we saw from the histogram.
+
+### Exercises
+
+1.  The dataset trees is available in R within the package datasets. Check the content of this dataset and then using graphical and numerical representations of data:
+
+```{=html}
+<!-- -->
+```
+a.  Get summaries for each of the variables in the dataset.
+
+**Solution**
+
+```{r eval=FALSE, include=FALSE}
+summary(trees)
+```
+
+b.  For each variable in the dataset, comment on the shape of their distribution.
+
+**Solution**
+
+Comparing the mean and the median for each variable we see that height is symmetric as the mean and the median are equal. For girth, we have that the mean is very close to the median which is an indication that this distribution is also symmetric. However, the mean and median of the volume are not close. Comparing the lower and upper quartiles (or plotting the boxplot of volume), we see that this distribution is positively skewed.
+
+c.  Plot a boxplot of the data and determine if there are any outliers in the dataset?
+
+**Solution**
+
+Yes, there is one outlier for the variable volume. We see this from the boxplot below:
+
+```{r eval=FALSE, include=FALSE}
+boxplot(trees)
+```
+
+2.  The British Crime Survey is an annual survey which collects data from adult individuals across England and Wales. The data you are going to analyse is compiled from the 2007/8 survey only. The text file `BCS2007.txt` on moodle contains data from 2958 individuals and records 9 variables.
+
+Individuals read a number of statements and were asked to assign a value corresponding to their belief from a scale of 1 (strongly agree) up to 5 (strongly disagree). A variable takes the value of 8 if the participant refused to provide a response and a value of 9 if they don't know. The statements posed were:
+
+-   polatt1: the police in this area can be relied on to be there when you need
+-   polatt2: the police in this area would treat you with respect if you had contact with them
+-   polatt3: the police in this area treat everyone fairly regardless of who they are
+-   polatt4: the police in this area can be relied on to deal with minor crimes
+-   polatt5: the police in this area understand the issues that affect this community
+-   polatt6: the police in this area are dealing with the things that matter to this community
+
+The variable confpol2 is a variable which has been constructed as a summative scale of the responses to the six statements. This variable represents a measure of confidence in the police. Note that due to the way the score has been calculated, a higher value of this score corresponds to a higher confidence in the police.
+
+Additional information on the type of area in which the person resides (1: urban or 2: rural) is recorded as well as the respondent's ethnic group (1: White British, 0: Other).
+
+a.  Load the data into R.
+b.  Calculate summary statistics for each of the question variables.
+c.  Create tables to summarise the responses for each of the questions polatt1-polatt6.
+d.  Construct a pair of histograms displaying the confpol2 values for individuals who live in rural and individuals who live in suburban areas and comment on them.
+e.  What other comparisons could be made with the available data?
+
+**Solution** a. b.
+
+```{r eval=FALSE, include=FALSE}
+BCSdata<-read.table("day2/BCS2007.txt",header=TRUE)
+summary(BCSdata)
+```
+
+c.  
+
+```{r eval=FALSE, include=FALSE}
+table(BCSdata$polatt1)
+```
+
+```{r eval=FALSE, include=FALSE}
+table(BCSdata$polatt2)
+```
+
+```{r eval=FALSE, include=FALSE}
+table(BCSdata$polatt3)
+```
+
+```{r eval=FALSE, include=FALSE}
+table(BCSdata$polatt4)
+```
+
+```{r eval=FALSE, include=FALSE}
+table(BCSdata$polatt5)
+```
+
+```{r eval=FALSE, include=FALSE}
+table(BCSdata$polatt6)
+```
+
+c.  
+
+```{r eval=FALSE, include=FALSE}
+x<-BCSdata$confpol2[BCSdata$rural2==1]
+y<-BCSdata$confpol2[BCSdata$rural2==2]
+par(mfrow=c(1,2))
+hist(x,main="confpol2 for urban areas")
+hist(y,main="confpol2 for rural areas")
+```
+
+The shape of the distribution of variable confpol2 is similar for both urban and rural areas. The distribution is negatively skewed and unimodal.
+
+e.  The whitebritish variable could be used to compare the confpol2 variable by ethnicity.
